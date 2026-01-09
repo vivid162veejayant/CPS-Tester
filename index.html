@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Click Speed Tester — CPS and 10s Interval Graph</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="card">
+    <header>
+      <div>
+        <h1>Click Speed Tester — CPS & 10s Interval Graph</h1>
+        <div class="sub">Track your average clicks per second and see how your performance changes across 10-second buckets.</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left: Controls & Metrics -->
+      <section class="panel">
+        <div class="controls">
+          <button id="startBtn" class="btn-start">Start</button>
+          <button id="stopBtn" class="btn-stop" disabled>Stop</button>
+          <button id="resetBtn" class="btn-reset">Reset</button>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">Total clicks</div>
+            <div class="value" id="totalClicks">0</div>
+          </div>
+          <div class="metric">
+            <div class="label">Elapsed time (s)</div>
+            <div class="value" id="elapsed">0.0</div>
+          </div>
+          <div class="metric">
+            <div class="label">Average CPS</div>
+            <div class="value" id="avgCps">0.00</div>
+          </div>
+        </div>
+
+        <button id="clickBtn" class="btn-click" disabled>Click me fast!</button>
+        <div class="hint">Tip: You can also press <code class="kb">Space</code> to click while the test is running.</div>
+      </section>
+
+      <!-- Right: Chart -->
+      <section class="panel chart-wrap">
+        <div class="chart-header">
+          <div class="chart-title">Clicks per 10-second interval</div>
+          <div class="legend">
+            <span><span class="swatch" style="background:#38bdf8;"></span>Clicks</span>
+            <span><span class="swatch" style="background:#22c55e;"></span>Max reference</span>
+          </div>
+        </div>
+        <canvas id="chart" width="800" height="260" aria-label="Bar chart of clicks per 10-second interval"></canvas>
+      </section>
+    </div>
+
+    <footer>
+      <span>Start → click as fast as you can → stop to lock results. Reset to begin a new session.</span>
+      <span>Bars are grouped: 0–10s, 10–20s, 20–30s, and so on.</span>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
