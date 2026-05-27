@@ -346,6 +346,7 @@ function tick() {
 
 function startSession() {
   if (isRunning) return;
+  if (!startBtn || !stopBtn || !clickBtn) return;
 
   resetSession();
   peakCPS = 0;
@@ -364,6 +365,7 @@ function startSession() {
 
 function stopSession() {
   if (!isRunning) return;
+  if (!startBtn || !stopBtn || !clickBtn) return;
 
   isRunning = false;
   stopTime = getNowSeconds();
@@ -407,9 +409,9 @@ function resetSession() {
 
   if (ctx && canvas) ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
-  clickBtn.disabled = true;
+  if (startBtn) startBtn.disabled = false;
+  if (stopBtn) stopBtn.disabled = true;
+  if (clickBtn) clickBtn.disabled = true;
 }
 
 /* =========================================================
@@ -418,6 +420,7 @@ function resetSession() {
 
 function registerClick(source = "mouse") {
   if (!isRunning) return;
+  if (!clickBtn) return;
 
   const timestamp = getNowSeconds() - startTime;
   const lastTs = clickTimestamps.length > 0 ? clickTimestamps[clickTimestamps.length - 1] : null;
@@ -444,14 +447,16 @@ function registerClick(source = "mouse") {
    EVENT LISTENERS
 ========================================================= */
 
-startBtn.addEventListener("click", startSession);
-stopBtn.addEventListener("click", stopSession);
-resetBtn.addEventListener("click", resetSession);
-clickBtn.addEventListener("click", () => registerClick("mouse"));
-clickBtn.addEventListener("touchstart", (event) => {
-  event.preventDefault();
-  registerClick("mouse");
-});
+if (startBtn) startBtn.addEventListener("click", startSession);
+if (stopBtn) stopBtn.addEventListener("click", stopSession);
+if (resetBtn) resetBtn.addEventListener("click", resetSession);
+if (clickBtn) {
+  clickBtn.addEventListener("click", () => registerClick("mouse"));
+  clickBtn.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+    registerClick("mouse");
+  });
+}
 
 if (resetBestBtn) resetBestBtn.addEventListener("click", resetBestCPS);
 if (exportBtn) exportBtn.addEventListener("click", exportScores);
@@ -498,5 +503,14 @@ if (canvas) {
    INITIALIZATION
 ========================================================= */
 
-resetSession();
-resizeCanvas();
+function init() {
+  resetSession();
+  resizeCanvas();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
