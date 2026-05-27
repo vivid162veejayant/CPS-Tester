@@ -5,20 +5,15 @@
 :root {
   --bg: #0f172a;
   --panel: #111827;
-
   --accent: #22c55e;
   --accent-2: #38bdf8;
-
   --text: #e5e7eb;
   --muted: #9ca3af;
-
   --danger: #ef4444;
   --warn: #f59e0b;
-
-  --border: rgba(255,255,255,0.08);
-  --soft-bg: rgba(255,255,255,0.03);
+  --border: rgba(255, 255, 255, 0.08);
+  --soft-bg: rgba(255, 255, 255, 0.03);
 }
-
 
 /* =========================================================
    GLOBAL RESET
@@ -32,14 +27,12 @@ html {
   scroll-behavior: smooth;
 }
 
-
 /* =========================================================
    BODY
 ========================================================= */
 
 body {
   margin: 0;
-
   font-family:
     ui-sans-serif,
     system-ui,
@@ -52,26 +45,16 @@ body {
     Arial,
     "Apple Color Emoji",
     "Segoe UI Emoji";
-
   background:
-    radial-gradient(
-      1200px 600px at 60% -20%,
-      #172554 0%,
-      #0b1029 60%,
-      #050816 100%
-    ),
+    radial-gradient(1200px 600px at 60% -20%, #172554 0%, #0b1029 60%, #050816 100%),
     var(--bg);
-
   color: var(--text);
-
   min-height: 100vh;
-
+  min-height: 100dvh;
   display: grid;
   place-items: center;
-
   padding: 24px;
 }
-
 
 /* =========================================================
    MAIN CARD
@@ -80,24 +63,12 @@ body {
 .card {
   width: 100%;
   max-width: 920px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.03),
-      rgba(255,255,255,0.02)
-    );
-
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
   border: 1px solid var(--border);
-
   border-radius: 18px;
-
   overflow: hidden;
-
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.45);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
-
 
 /* =========================================================
    HEADER
@@ -105,33 +76,25 @@ body {
 
 header {
   padding: 20px 24px;
-
   border-bottom: 1px solid var(--border);
-
   display: flex;
   justify-content: space-between;
   align-items: center;
-
   gap: 16px;
 }
 
 header h1 {
   margin: 0;
-
   font-size: 20px;
   font-weight: 700;
-
   letter-spacing: 0.3px;
-
   color: #f8fbff;
 }
 
 header .sub {
   font-size: 13px;
-
   color: var(--muted);
 }
-
 
 /* =========================================================
    MAIN GRID
@@ -139,14 +102,10 @@ header .sub {
 
 .grid {
   display: grid;
-
   grid-template-columns: 1.2fr 1fr;
-
   gap: 20px;
-
   padding: 20px;
 }
-
 
 /* =========================================================
    PANELS
@@ -154,14 +113,10 @@ header .sub {
 
 .panel {
   background: var(--panel);
-
   border: 1px solid var(--border);
-
   border-radius: 14px;
-
   padding: 16px;
 }
-
 
 /* =========================================================
    METRICS GRID
@@ -169,15 +124,10 @@ header .sub {
 
 .metrics {
   display: grid;
-
-  grid-template-columns:
-    repeat(auto-fit, minmax(160px, 1fr));
-
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
-
   margin-top: 12px;
 }
-
 
 /* =========================================================
    METRIC CARD
@@ -185,49 +135,45 @@ header .sub {
 
 .metric {
   background: var(--soft-bg);
-
-  border: 1px solid rgba(255,255,255,0.06);
-
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-
   padding: 14px;
-
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
     background 0.2s ease;
+  will-change: transform;
 }
 
 .metric:hover {
   transform: translateY(-2px);
-
-  border-color: rgba(255,255,255,0.12);
-
-  background: rgba(255,255,255,0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .metric .label {
   font-size: 12px;
-
   color: var(--muted);
-
   margin-bottom: 8px;
-
   text-transform: uppercase;
-
   letter-spacing: 0.4px;
 }
 
 .metric .value {
   font-size: clamp(20px, 3vw, 28px);
-
   font-weight: 700;
-
   line-height: 1.1;
-
   color: #f8fafc;
 }
 
+.metric.live .value {
+  color: #67e8f9;
+  text-shadow: 0 0 14px rgba(103, 232, 249, 0.35);
+}
+
+.metric.peak .value {
+  color: #86efac;
+}
 
 /* =========================================================
    CONTROLS
@@ -235,35 +181,24 @@ header .sub {
 
 .controls {
   display: flex;
-
   flex-wrap: wrap;
-
   gap: 10px;
-
   margin-top: 14px;
 }
 
-
 /* =========================================================
-   BUTTONS
+   BUTTONS + SELECT
 ========================================================= */
 
-button {
+button,
+select {
   appearance: none;
-
   border: none;
   outline: none;
-
   border-radius: 12px;
-
   padding: 10px 16px;
-
   font-weight: 700;
-
   cursor: pointer;
-
-  color: #051018;
-
   transition:
     transform 0.08s ease,
     box-shadow 0.2s ease,
@@ -271,7 +206,18 @@ button {
     filter 0.2s ease;
 }
 
-button:hover:not(:disabled) {
+button {
+  color: #051018;
+}
+
+select {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+button:hover:not(:disabled),
+select:hover {
   filter: brightness(1.05);
 }
 
@@ -281,51 +227,33 @@ button:active:not(:disabled) {
 
 button:disabled {
   opacity: 0.5;
-
   cursor: not-allowed;
 }
 
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
 
 /* =========================================================
    BUTTON VARIANTS
 ========================================================= */
 
 .btn-start {
-  background:
-    linear-gradient(
-      135deg,
-      #22c55e,
-      #16a34a
-    );
-
-  box-shadow:
-    0 6px 20px rgba(34,197,94,0.35);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
 }
 
 .btn-stop {
-  background:
-    linear-gradient(
-      135deg,
-      #fb7185,
-      #ef4444
-    );
-
-  box-shadow:
-    0 6px 20px rgba(239,68,68,0.35);
+  background: linear-gradient(135deg, #fb7185, #ef4444);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
 }
 
 .btn-reset {
-  background:
-    linear-gradient(
-      135deg,
-      #93c5fd,
-      #60a5fa
-    );
-
-  box-shadow:
-    0 6px 20px rgba(96,165,250,0.35);
+  background: linear-gradient(135deg, #93c5fd, #60a5fa);
+  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.35);
 }
-
 
 /* =========================================================
    MAIN CLICK BUTTON
@@ -333,26 +261,26 @@ button:disabled {
 
 .btn-click {
   width: 100%;
-
   margin-top: 16px;
-
   padding: 18px 16px;
-
   font-size: 20px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #38bdf8,
-      #06b6d4
-    );
-
+  background: linear-gradient(135deg, #38bdf8, #06b6d4);
   color: #001219;
-
-  box-shadow:
-    0 12px 30px rgba(56,189,248,0.35);
+  box-shadow: 0 12px 30px rgba(56, 189, 248, 0.35);
+  will-change: transform;
 }
 
+/* =========================================================
+   INTERACTION POLISH
+========================================================= */
+
+button,
+.btn-click,
+canvas {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
 
 /* =========================================================
    HINT TEXT
@@ -360,14 +288,10 @@ button:disabled {
 
 .hint {
   margin-top: 10px;
-
   font-size: 12px;
-
   color: var(--muted);
-
   line-height: 1.5;
 }
-
 
 /* =========================================================
    CHART AREA
@@ -375,16 +299,11 @@ button:disabled {
 
 .chart-wrap {
   position: relative;
-
   height: 320px;
-
   display: grid;
-
   grid-template-rows: auto 1fr;
-
   gap: 10px;
 }
-
 
 /* =========================================================
    CHART HEADER
@@ -392,20 +311,15 @@ button:disabled {
 
 .chart-header {
   display: flex;
-
   justify-content: space-between;
-
   align-items: baseline;
-
   gap: 12px;
 }
 
 .chart-title {
   font-weight: 700;
-
   letter-spacing: 0.3px;
 }
-
 
 /* =========================================================
    LEGEND
@@ -413,27 +327,19 @@ button:disabled {
 
 .legend {
   display: flex;
-
   gap: 12px;
-
   flex-wrap: wrap;
-
   font-size: 12px;
-
   color: var(--muted);
 }
 
 .legend .swatch {
   width: 10px;
   height: 10px;
-
   border-radius: 3px;
-
   display: inline-block;
-
   margin-right: 6px;
 }
-
 
 /* =========================================================
    CANVAS
@@ -442,19 +348,10 @@ button:disabled {
 canvas {
   width: 100%;
   height: 100%;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.02),
-      rgba(255,255,255,0.01)
-    );
-
-  border: 1px solid rgba(255,255,255,0.06);
-
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
 }
-
 
 /* =========================================================
    FOOTER
@@ -462,46 +359,32 @@ canvas {
 
 footer {
   padding: 14px 20px;
-
   border-top: 1px solid var(--border);
-
   font-size: 12px;
-
   color: var(--muted);
-
   display: flex;
-
   justify-content: space-between;
-
   flex-wrap: wrap;
-
   gap: 8px;
 }
-
 
 /* =========================================================
    KEYBOARD KEY STYLE
 ========================================================= */
 
 code.kb {
-  background: rgba(255,255,255,0.08);
-
+  background: rgba(255, 255, 255, 0.08);
   padding: 2px 6px;
-
   border-radius: 6px;
-
   color: #e2e8f0;
-
   font-weight: 700;
 }
-
 
 /* =========================================================
    TABLET RESPONSIVE
 ========================================================= */
 
 @media (max-width: 860px) {
-
   .grid {
     grid-template-columns: 1fr;
   }
@@ -511,13 +394,11 @@ code.kb {
   }
 }
 
-
 /* =========================================================
    MOBILE RESPONSIVE
 ========================================================= */
 
 @media (max-width: 640px) {
-
   body {
     padding: 14px;
   }
@@ -528,9 +409,7 @@ code.kb {
 
   header {
     flex-direction: column;
-
     align-items: flex-start;
-
     padding: 18px;
   }
 
@@ -540,7 +419,6 @@ code.kb {
 
   .grid {
     padding: 14px;
-
     gap: 14px;
   }
 
@@ -549,9 +427,7 @@ code.kb {
   }
 
   .metrics {
-    grid-template-columns:
-      repeat(auto-fit, minmax(130px, 1fr));
-
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 10px;
   }
 
@@ -567,13 +443,13 @@ code.kb {
     flex-direction: column;
   }
 
-  .controls button {
+  .controls button,
+  .controls select {
     width: 100%;
   }
 
   .btn-click {
     padding: 16px;
-
     font-size: 18px;
   }
 
@@ -583,20 +459,16 @@ code.kb {
 
   footer {
     flex-direction: column;
-
     align-items: flex-start;
-
     padding: 12px 16px;
   }
 }
-
 
 /* =========================================================
    SMALL PHONE OPTIMIZATION
 ========================================================= */
 
 @media (max-width: 420px) {
-
   .metrics {
     grid-template-columns: 1fr 1fr;
   }
@@ -615,5 +487,17 @@ code.kb {
 
   .chart-wrap {
     height: 220px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
   }
 }
