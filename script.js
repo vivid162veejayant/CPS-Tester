@@ -37,6 +37,7 @@ const ctx = canvas ? canvas.getContext("2d") : null;
 ========================================================= */
 
 let isRunning = false;
+let hasSessionStarted = false;
 let startTime = 0;
 let stopTime = 0;
 let animationFrameId = null;
@@ -50,8 +51,15 @@ let cpsHistory = [];
 let lastHistorySampleAt = 0;
 const historySampleInterval = 1 / 30;
 
+const MAX_REASONABLE_CPS = 25;
+const MIN_BEST_WINDOW_SECONDS = 1;
 const storedBest = parseFloat(localStorage.getItem("bestCPS"));
-let bestCPS = Number.isFinite(storedBest) ? storedBest : 0;
+let bestCPS =
+  Number.isFinite(storedBest) &&
+  storedBest >= 0 &&
+  storedBest <= MAX_REASONABLE_CPS
+    ? storedBest
+    : 0;
 let peakCPS = 0;
 
 // Anti-cheat: ignore clicks faster than 10ms apart.
@@ -62,6 +70,11 @@ let sessionModeSeconds = modeSelect ? Number(modeSelect.value || 0) : 0;
 
 // Tiny low-latency click sound.
 const audioCtx = window.AudioContext ? new AudioContext() : null;
+
+if (bestCPS === 0 && Number.isFinite(storedBest) && storedBest !== 0) {
+  localStorage.setItem("bestCPS", "0.00");
+  console.warn("[CPS] Invalid stored bestCPS detected and reset:", storedBest);
+}
 
 console.log("[CPS] Loaded bestCPS:", bestCPS.toFixed(2));
 
@@ -88,7 +101,7 @@ function saveBestCPS() {
 }
 
 function updateBestCPS(currentCPS) {
-  if (currentCPS > bestCPS) {
+  if (currentCPS > bestCPS && currentCPS <= MAX_REASONABLE_CPS) {
     bestCPS = currentCPS;
     saveBestCPS();
     console.log("[CPS] New bestCPS:", bestCPS.toFixed(2));
@@ -176,7 +189,11 @@ function updateMetrics() {
   const spaceLive = countRecentClicks(spaceClickTimestamps, 1);
 
   if (liveCPS > peakCPS) peakCPS = liveCPS;
-  updateBestCPS(Math.max(peakCPS, avgCPS));
+
+  // Best should reflect sustained 1-second CPS, not startup average spikes.
+  if (elapsed >= MIN_BEST_WINDOW_SECONDS) {
+    updateBestCPS(liveCPS);
+  }
 
   if (totalClicksEl) totalClicksEl.textContent = String(totalClicks);
   if (elapsedEl) elapsedEl.textContent = elapsed.toFixed(1);
@@ -350,8 +367,8 @@ function startSession() {
 
   resetSession();
   peakCPS = 0;
-  startTime = getNowSeconds();
   isRunning = true;
+  hasSessionStarted = false;
   firstClickTime = null;
 
   startBtn.disabled = true;
@@ -381,6 +398,7 @@ function stopSession() {
 
 function resetSession() {
   isRunning = false;
+  hasSessionStarted = false;
   startTime = 0;
   stopTime = 0;
   peakCPS = 0;
@@ -421,6 +439,11 @@ function resetSession() {
 function registerClick(source = "mouse") {
   if (!isRunning) return;
   if (!clickBtn) return;
+
+  if (!hasSessionStarted) {
+    startTime = getNowSeconds();
+    hasSessionStarted = true;
+  }
 
   const timestamp = getNowSeconds() - startTime;
   const lastTs = clickTimestamps.length > 0 ? clickTimestamps[clickTimestamps.length - 1] : null;
@@ -513,4 +536,3 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
-
