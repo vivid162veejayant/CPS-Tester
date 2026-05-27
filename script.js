@@ -1,224 +1,510 @@
-// Elements
-const startBtn = document.getElementById('startBtn');
-const stopBtn  = document.getElementById('stopBtn');
-const resetBtn = document.getElementById('resetBtn');
-const clickBtn = document.getElementById('clickBtn');
+/* =========================================================
+   CPS TESTER - SCRIPT.JS
+   ---------------------------------------------------------
+   Features:
+   ✅ Accurate click timestamp tracking
+   ✅ Spacebar support
+   ✅ Best CPS persistence using localStorage
+   ✅ Live statistics updates
+   ✅ Responsive canvas chart
+   ✅ Organized and documented structure
+========================================================= */
 
-const totalClicksEl = document.getElementById('totalClicks');
-const elapsedEl     = document.getElementById('elapsed');
-const avgCpsEl      = document.getElementById('avgCps');
 
-const canvas  = document.getElementById('chart');
-const ctx     = canvas.getContext('2d');
+/* =========================================================
+   DOM ELEMENT REFERENCES
+========================================================= */
 
-// State
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const resetBtn = document.getElementById("resetBtn");
+const clickBtn = document.getElementById("clickBtn");
+
+const totalClicksEl = document.getElementById("totalClicks");
+const elapsedEl = document.getElementById("elapsed");
+const avgCpsEl = document.getElementById("avgCps");
+const bestCpsEl = document.getElementById("bestCps");
+
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+
+
+/* =========================================================
+   APPLICATION STATE
+========================================================= */
+
 let isRunning = false;
-let startTime = 0;           // performance.now() at start
-let stopTime  = 0;           // performance.now() at last stop
-let rafId     = null;        // animation frame for live updates
-let clicks    = [];          // array of click timestamps (seconds since start)
 
-// Helpers
-const nowSeconds = () => performance.now() / 1000;
+let startTime = 0;
+let stopTime = 0;
 
+let animationFrameId = null;
+
+/*
+   Stores click timestamps in seconds.
+
+   Example:
+   [0.2, 0.5, 1.1, 1.4]
+*/
+let clickTimestamps = [];
+
+/*
+   Best CPS score saved permanently.
+*/
+let bestCPS = Number(localStorage.getItem("bestCPS")) || 0;
+
+
+/* =========================================================
+   TIME UTILITIES
+========================================================= */
+
+/**
+ * Returns current high precision time in seconds.
+ */
+function getNowSeconds() {
+    return performance.now() / 1000;
+}
+
+/**
+ * Returns elapsed session time.
+ */
 function getElapsedSeconds() {
-  if (!startTime) return 0;
-  if (isRunning) return nowSeconds() - startTime;
-  return Math.max(0, stopTime - startTime);
+    if (!startTime) return 0;
+
+    if (isRunning) {
+        return getNowSeconds() - startTime;
+    }
+
+    return stopTime - startTime;
 }
 
+
+/* =========================================================
+   LOCAL STORAGE
+========================================================= */
+
+/**
+ * Saves best CPS into browser storage.
+ */
+function saveBestCPS() {
+    localStorage.setItem("bestCPS", bestCPS.toFixed(2));
+}
+
+/**
+ * Updates Best CPS if current score is higher.
+ */
+function updateBestCPS(currentCPS) {
+    if (currentCPS > bestCPS) {
+        bestCPS = currentCPS;
+        saveBestCPS();
+    }
+
+    bestCpsEl.textContent = bestCPS.toFixed(2);
+}
+
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+/**
+ * Calculates current CPS.
+ */
+function calculateCPS() {
+    const elapsed = getElapsedSeconds();
+
+    if (elapsed <= 0) return 0;
+
+    return clickTimestamps.length / elapsed;
+}
+
+/**
+ * Updates all visible statistics.
+ */
 function updateMetrics() {
-  const total = clicks.length;
-  const elapsed = getElapsedSeconds();
-  const cps = elapsed > 0 ? total / elapsed : 0;
+    const totalClicks = clickTimestamps.length;
+    const elapsed = getElapsedSeconds();
+    const cps = calculateCPS();
 
-  totalClicksEl.textContent = total.toString();
-  elapsedEl.textContent     = elapsed.toFixed(1);
-  avgCpsEl.textContent      = cps.toFixed(2);
+    totalClicksEl.textContent = totalClicks;
+    elapsedEl.textContent = elapsed.toFixed(1);
+    avgCpsEl.textContent = cps.toFixed(2);
+
+    updateBestCPS(cps);
 }
 
-function computeBins(intervalSec = 10) {
-  const elapsed = getElapsedSeconds();
-  const binCount = Math.max(1, Math.ceil(elapsed / intervalSec));
-  const bins = new Array(binCount).fill(0);
-  for (const t of clicks) {
-    const idx = Math.min(bins.length - 1, Math.floor(t / intervalSec));
-    bins[idx] += 1;
-  }
-  return bins;
+
+/* =========================================================
+   CHART DATA PROCESSING
+========================================================= */
+
+/**
+ * Groups clicks into time bins.
+ *
+ * Example:
+ * Every 10 seconds becomes one bar.
+ */
+function computeBins(intervalSeconds = 10) {
+
+    const elapsed = getElapsedSeconds();
+
+    const totalBins = Math.max(
+        1,
+        Math.ceil(elapsed / intervalSeconds)
+    );
+
+    const bins = new Array(totalBins).fill(0);
+
+    for (const timestamp of clickTimestamps) {
+
+        const index = Math.min(
+            bins.length - 1,
+            Math.floor(timestamp / intervalSeconds)
+        );
+
+        bins[index]++;
+    }
+
+    return bins;
 }
 
+
+/* =========================================================
+   CHART RENDERING
+========================================================= */
+
+/**
+ * Draws the CPS chart.
+ */
 function drawChart() {
-  const w = canvas.width;
-  const h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
 
-  // Padding
-  const pad = { top: 16, right: 18, bottom: 36, left: 40 };
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
 
-  // Axes area
-  const cw = w - pad.left - pad.right;
-  const ch = h - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, width, height);
 
-  // Data
-  const bins = computeBins(10);
-  const maxVal = Math.max(1, ...bins);
+    const padding = {
+        top: 20,
+        right: 20,
+        bottom: 40,
+        left: 45
+    };
 
-  // Axes
-  ctx.save();
-  ctx.translate(pad.left, pad.top);
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
 
-  // Grid lines and Y labels
-  const yTicks = 4;
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.font = '12px ui-sans-serif, system-ui, -apple-system';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  for (let i = 0; i <= yTicks; i++) {
-    const y = ch - (i / yTicks) * ch;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(cw, y);
-    ctx.stroke();
+    const bins = computeBins(10);
 
-    const val = Math.round((i / yTicks) * maxVal);
-    ctx.fillText(val.toString(), -8, y);
-  }
+    const maxValue = Math.max(1, ...bins);
 
-  // Bars
-  const count = bins.length;
-  const gap = Math.max(8, Math.min(24, cw / (count * 6)));
-  const barWidth = Math.max(18, Math.min(60, (cw - gap * (count + 1)) / count));
+    ctx.save();
+    ctx.translate(padding.left, padding.top);
 
-  bins.forEach((v, i) => {
-    const x = gap + i * (barWidth + gap);
-    const hRatio = v / maxVal;
-    const barH = Math.round(hRatio * (ch - 8));
-    const y = ch - barH;
 
-    // Max reference background
-    ctx.fillStyle = 'rgba(34,197,94,0.10)';
-    ctx.fillRect(x, 0, barWidth, ch);
+    /* -------------------------
+       GRID LINES
+    ------------------------- */
 
-    // Bar
-    const gradient = ctx.createLinearGradient(0, y, 0, y + barH);
-    gradient.addColorStop(0, '#38bdf8');
-    gradient.addColorStop(1, '#06b6d4');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x, y, barWidth, barH);
+    const yTicks = 4;
 
-    // Value label
-    ctx.fillStyle = '#e5f6ff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.font = '12px ui-sans-serif, system-ui, -apple-system';
-    ctx.fillText(v.toString(), x + barWidth / 2, y - 2);
-  });
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.font = "12px sans-serif";
 
-  // X-axis labels
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.font = '12px ui-sans-serif, system-ui, -apple-system';
-  bins.forEach((_, i) => {
-    const x = gap + i * (barWidth + gap) + barWidth / 2;
-    const labelStart = i * 10;
-    const labelEnd = (i + 1) * 10;
-    ctx.fillText(`${labelStart}–${labelEnd}s`, x, ch + 10);
-  });
+    for (let i = 0; i <= yTicks; i++) {
 
-  ctx.restore();
+        const y = chartHeight - (i / yTicks) * chartHeight;
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(chartWidth, y);
+        ctx.stroke();
+
+        const value = Math.round((i / yTicks) * maxValue);
+
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(value, -8, y);
+    }
+
+
+    /* -------------------------
+       BARS
+    ------------------------- */
+
+    const gap = 12;
+
+    const barWidth =
+        (chartWidth - gap * (bins.length + 1)) / bins.length;
+
+    bins.forEach((value, index) => {
+
+        const x = gap + index * (barWidth + gap);
+
+        const barHeight =
+            (value / maxValue) * (chartHeight - 10);
+
+        const y = chartHeight - barHeight;
+
+        // Bar background
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        ctx.fillRect(x, 0, barWidth, chartHeight);
+
+        // Gradient bar
+        const gradient = ctx.createLinearGradient(
+            0,
+            y,
+            0,
+            y + barHeight
+        );
+
+        gradient.addColorStop(0, "#38bdf8");
+        gradient.addColorStop(1, "#06b6d4");
+
+        ctx.fillStyle = gradient;
+
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        // Value text
+        ctx.fillStyle = "#ffffff";
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+
+        ctx.fillText(
+            value,
+            x + barWidth / 2,
+            y - 4
+        );
+    });
+
+
+    /* -------------------------
+       X AXIS LABELS
+    ------------------------- */
+
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.textBaseline = "top";
+
+    bins.forEach((_, index) => {
+
+        const x =
+            gap +
+            index * (barWidth + gap) +
+            barWidth / 2;
+
+        const start = index * 10;
+        const end = (index + 1) * 10;
+
+        ctx.fillText(
+            `${start}-${end}s`,
+            x,
+            chartHeight + 10
+        );
+    });
+
+    ctx.restore();
 }
 
+
+/* =========================================================
+   MAIN LOOP
+========================================================= */
+
+/**
+ * Animation loop.
+ */
 function tick() {
-  updateMetrics();
-  drawChart();
-  if (isRunning) rafId = requestAnimationFrame(tick);
+
+    updateMetrics();
+    drawChart();
+
+    if (isRunning) {
+        animationFrameId = requestAnimationFrame(tick);
+    }
 }
 
-function start() {
-  if (isRunning) return;
-  // Fresh start (do not resume partial): clear state first if we already had a session
-  if (startTime && !isRunning) {
-    // Treat pressing Start again as a new run
-    reset();
-  }
-  startTime = nowSeconds();
-  stopTime = 0;
-  isRunning = true;
-  startBtn.disabled = true;
-  stopBtn.disabled = false;
-  clickBtn.disabled = false;
-  rafId = requestAnimationFrame(tick);
-  clickBtn.focus({ preventScroll: true });
+
+/* =========================================================
+   SESSION CONTROLS
+========================================================= */
+
+/**
+ * Starts a new CPS session.
+ */
+function startSession() {
+
+    if (isRunning) return;
+
+    resetSession();
+
+    startTime = getNowSeconds();
+
+    isRunning = true;
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    clickBtn.disabled = false;
+
+    clickBtn.focus();
+
+    animationFrameId = requestAnimationFrame(tick);
 }
 
-function stop() {
-  if (!isRunning) return;
-  isRunning = false;
-  stopTime = nowSeconds();
-  stopBtn.disabled = true;
-  clickBtn.disabled = true;
-  startBtn.disabled = false; // allow a new run (which resets)
-  if (rafId) cancelAnimationFrame(rafId);
-  updateMetrics();
-  drawChart();
+/**
+ * Stops the active session.
+ */
+function stopSession() {
+
+    if (!isRunning) return;
+
+    isRunning = false;
+
+    stopTime = getNowSeconds();
+
+    cancelAnimationFrame(animationFrameId);
+
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    clickBtn.disabled = true;
+
+    updateMetrics();
+    drawChart();
 }
 
-function reset() {
-  isRunning = false;
-  startTime = 0;
-  stopTime = 0;
-  clicks = [];
-  if (rafId) cancelAnimationFrame(rafId);
-  totalClicksEl.textContent = '0';
-  elapsedEl.textContent = '0.0';
-  avgCpsEl.textContent = '0.00';
-  // Clear chart
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // Controls
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
-  clickBtn.disabled = true;
+/**
+ * Completely resets the session.
+ */
+function resetSession() {
+
+    isRunning = false;
+
+    startTime = 0;
+    stopTime = 0;
+
+    clickTimestamps = [];
+
+    cancelAnimationFrame(animationFrameId);
+
+    totalClicksEl.textContent = "0";
+    elapsedEl.textContent = "0.0";
+    avgCpsEl.textContent = "0.00";
+
+    bestCpsEl.textContent = bestCPS.toFixed(2);
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.clientWidth,
+        canvas.clientHeight
+    );
+
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    clickBtn.disabled = true;
 }
 
+
+/* =========================================================
+   CLICK HANDLING
+========================================================= */
+
+/**
+ * Registers one click.
+ */
 function registerClick() {
-  if (!isRunning || !startTime) return;
-  const t = nowSeconds() - startTime; // seconds since start
-  clicks.push(t);
-  // A small visual pulse on click button
-  clickBtn.style.transform = 'scale(0.995)';
-  setTimeout(() => { clickBtn.style.transform = 'scale(1)'; }, 40);
+
+    if (!isRunning) return;
+
+    const timestamp =
+        getNowSeconds() - startTime;
+
+    clickTimestamps.push(timestamp);
+
+    // Small click animation
+    clickBtn.style.transform = "scale(0.97)";
+
+    setTimeout(() => {
+        clickBtn.style.transform = "scale(1)";
+    }, 40);
 }
 
-// Events
-startBtn.addEventListener('click', start);
-stopBtn.addEventListener('click', stop);
-resetBtn.addEventListener('click', reset);
-clickBtn.addEventListener('click', registerClick);
 
-// Keyboard support (Space)
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    if (isRunning) registerClick();
-  }
+/* =========================================================
+   EVENT LISTENERS
+========================================================= */
+
+startBtn.addEventListener("click", startSession);
+
+stopBtn.addEventListener("click", stopSession);
+
+resetBtn.addEventListener("click", resetSession);
+
+clickBtn.addEventListener("click", registerClick);
+
+
+/*
+   Spacebar support.
+
+   Prevents repeated auto-fire when key is held.
+*/
+window.addEventListener("keydown", (event) => {
+
+    if (event.code !== "Space") return;
+
+    // Ignore repeated holding
+    if (event.repeat) return;
+
+    // Ignore typing inside inputs
+    const activeTag =
+        document.activeElement.tagName;
+
+    const isTyping =
+        activeTag === "INPUT" ||
+        activeTag === "TEXTAREA";
+
+    if (isTyping) return;
+
+    event.preventDefault();
+
+    if (isRunning) {
+        registerClick();
+    }
 });
 
-// Handle resize for high-DPI and crisp canvas
-function resizeCanvas() {
-  const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-  const displayWidth = canvas.clientWidth;
-  const displayHeight = canvas.clientHeight;
-  canvas.width = Math.floor(displayWidth * ratio);
-  canvas.height = Math.floor(displayHeight * ratio);
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  drawChart();
-}
-const ro = new ResizeObserver(resizeCanvas);
-ro.observe(canvas);
 
-// Initialize
-reset();
+/* =========================================================
+   RESPONSIVE CANVAS
+========================================================= */
+
+/**
+ * Makes canvas sharp on all displays.
+ */
+function resizeCanvas() {
+
+    const ratio = window.devicePixelRatio || 1;
+
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
+
+    canvas.width = displayWidth * ratio;
+    canvas.height = displayHeight * ratio;
+
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    drawChart();
+}
+
+const resizeObserver =
+    new ResizeObserver(resizeCanvas);
+
+resizeObserver.observe(canvas);
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+resetSession();
 resizeCanvas();
