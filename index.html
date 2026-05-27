@@ -2,41 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Click Speed Tester — CPS and 10s Interval Graph</title>
+  <title>Click Speed Tester — Advanced CPS Analytics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="card">
     <header>
       <div>
-        <h1>Click Speed Tester — CPS & 10s Interval Graph</h1>
-        <div class="sub">Track your average clicks per second and see how your performance changes across 10-second buckets.</div>
+        <h1>Click Speed Tester — Advanced CPS Analytics</h1>
+        <div class="sub">Live CPS, peak tracking, timed modes, split input stats, and exportable session analytics.</div>
       </div>
     </header>
 
     <div class="grid">
-      <!-- Left: Controls & Metrics -->
       <section class="panel">
         <div class="controls">
           <button id="startBtn" class="btn-start">Start</button>
           <button id="stopBtn" class="btn-stop" disabled>Stop</button>
           <button id="resetBtn" class="btn-reset">Reset</button>
           <button id="resetBestBtn">Reset Best CPS</button>
-        </div>
-
-        <div class="stat">
-          <span>Live CPS</span>
-          <strong id="liveCps">0.00</strong>
+          <button id="exportBtn" class="btn-reset">Export</button>
+          <select id="modeSelect" aria-label="Session mode">
+            <option value="5">5s</option>
+            <option value="10">10s</option>
+            <option value="30">30s</option>
+            <option value="0" selected>Infinite</option>
+          </select>
         </div>
 
         <div class="metrics">
+          <div class="metric live">
+            <div class="label">Live CPS</div>
+            <div class="value" id="liveCps">0.00</div>
+          </div>
+          <div class="metric peak">
+            <div class="label">Peak CPS</div>
+            <div class="value" id="peakCps">0.00</div>
+          </div>
           <div class="metric">
-            <div class="label">Total clicks</div>
+            <div class="label">Total Clicks</div>
             <div class="value" id="totalClicks">0</div>
           </div>
           <div class="metric">
-            <div class="label">Elapsed time (s)</div>
+            <div class="label">Elapsed Time (s)</div>
             <div class="value" id="elapsed">0.0</div>
           </div>
           <div class="metric">
@@ -44,31 +53,53 @@
             <div class="value" id="avgCps">0.00</div>
           </div>
           <div class="metric">
-            <div class="label">🏆 Best CPS</div>
+            <div class="label">Best CPS</div>
             <div class="value" id="bestCps">0.00</div>
+          </div>
+          <div class="metric">
+            <div class="label">Mouse CPS</div>
+            <div class="value" id="mouseCps">0.00</div>
+          </div>
+          <div class="metric">
+            <div class="label">Space CPS</div>
+            <div class="value" id="spaceCps">0.00</div>
+          </div>
+          <div class="metric">
+            <div class="label">Consistency (%)</div>
+            <div class="value" id="consistency">100.0</div>
+          </div>
+          <div class="metric">
+            <div class="label">Fastest Burst CPS</div>
+            <div class="value" id="fastestBurst">0.00</div>
+          </div>
+          <div class="metric">
+            <div class="label">Reaction Time</div>
+            <div class="value" id="reactionTime">0ms</div>
+          </div>
+          <div class="metric">
+            <div class="label">Stamina (%)</div>
+            <div class="value" id="stamina">100.0</div>
           </div>
         </div>
 
         <button id="clickBtn" class="btn-click" disabled>Click me fast!</button>
-        <div class="hint">Tip: You can also press <code class="kb">Space</code> to click while the test is running.</div>
+        <div class="hint">Tip: Press <code class="kb">Space</code> while running. Touch is supported on mobile.</div>
       </section>
 
-      <!-- Right: Chart -->
       <section class="panel chart-wrap">
         <div class="chart-header">
-          <div class="chart-title">Clicks per 10-second interval</div>
+          <div class="chart-title">Live CPS Graph</div>
           <div class="legend">
-            <span><span class="swatch" style="background:#38bdf8;"></span>Clicks</span>
-            <span><span class="swatch" style="background:#22c55e;"></span>Max reference</span>
+            <span><span class="swatch" style="background:#38bdf8;"></span>Live CPS</span>
           </div>
         </div>
-        <canvas id="chart" width="800" height="260" aria-label="Bar chart of clicks per 10-second interval"></canvas>
+        <canvas id="chart" width="800" height="260" aria-label="Line chart of live CPS over time"></canvas>
       </section>
     </div>
 
     <footer>
-      <span>Start → click as fast as you can → stop to lock results. Reset to begin a new session.</span>
-      <span>Bars are grouped: 0–10s, 10–20s, 20–30s, and so on.</span>
+      <span>Choose a mode, start, click fast, and export your session results.</span>
+      <span>Best CPS persists between sessions.</span>
     </footer>
   </div>
   <script src="script.js"></script>
