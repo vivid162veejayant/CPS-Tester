@@ -149,13 +149,23 @@ function calculateConsistency() {
 }
 
 function calculateFastestBurst() {
-  if (clickTimestamps.length < 2) return 0;
-  let fastest = Infinity;
-  for (let i = 1; i < clickTimestamps.length; i++) {
-    const d = clickTimestamps[i] - clickTimestamps[i - 1];
-    if (d < fastest) fastest = d;
+  // Use max clicks inside any rolling 1-second window.
+  // This is more stable and meaningful than 1/min-interval.
+  if (clickTimestamps.length === 0) return 0;
+
+  let left = 0;
+  let best = 0;
+
+  for (let right = 0; right < clickTimestamps.length; right++) {
+    while (clickTimestamps[right] - clickTimestamps[left] > 1) {
+      left++;
+    }
+
+    const countInWindow = right - left + 1;
+    if (countInWindow > best) best = countInWindow;
   }
-  return fastest === Infinity || fastest <= 0 ? 0 : 1 / fastest;
+
+  return best;
 }
 
 function calculateReactionTimeMs() {
